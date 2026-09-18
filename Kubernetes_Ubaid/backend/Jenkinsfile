@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    cd Kubernetes_Ubaid/backend
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Restart App') {
+            steps {
+                sh '''
+                    pm2 restart flask-backend || pm2 start Kubernetes_Ubaid/backend/venv/bin/python3 --name flask-backend -- Kubernetes_Ubaid/backend/app.py
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Flask backend deployed successfully!'
+        }
+        failure {
+            echo 'Flask backend deployment failed.'
+        }
+    }
+}
