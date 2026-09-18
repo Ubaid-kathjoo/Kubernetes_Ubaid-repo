@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        FLASK_HOST = 'http://localhost:5000'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    cd Kubernetes_Ubaid/frontend
+                    npm install
+                '''
+            }
+        }
+
+        stage('Restart App') {
+            steps {
+                sh '''
+                    cd Kubernetes_Ubaid/frontend
+                    pm2 restart express-frontend --update-env || FLASK_HOST=http://localhost:5000 pm2 start server.js --name express-frontend
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Express frontend deployed successfully!'
+        }
+        failure {
+            echo 'Express frontend deployment failed.'
+        }
+    }
+}
